@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from duel.instructions import InsDump, InsInfo, DumpError, \
-    reg_name_to_idx
+    reg_name_to_idx, reg_idx_to_name, InsRun, InsError
 
 
 class AddDump(InsDump):
@@ -55,3 +55,33 @@ class AddDump(InsDump):
         option = 0x2
         reg_b_idx = 0
         return InsInfo(self.op_code, option, reg_a_idx, reg_b_idx, immediate)
+
+
+class AddRun(InsRun):
+
+    @classmethod
+    def get_op_code(self):
+        return 0x05
+
+    def run_ins(self, ins_info, reg_dict, ctx):
+        if ins_info.option == 0x1:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            reg_b = reg_idx_to_name.get(ins_info.get_b)
+            if reg_b is None:
+                raise InsError('inserror reg_b: 0x%x' % ins_info.reg_b)
+            # FIXME handle sign and flags
+            val = reg_dict[reg_b]
+            reg_dict[reg_a] += val
+        elif ins_info.option == 0x2:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            val = ins_info.immediate & 0x7fff
+            sign = ins_info.immediate & 0x8000
+            # FIXME handle sign and flags
+            assert(sign == 0)
+            reg_dict[reg_a] += val
+        else:
+            raise InsError('invalid option: 0x%x' % ins_info.option)

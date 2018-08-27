@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from duel.instructions import InsDump, InsInfo, DumpError, \
-    reg_name_to_idx
+    reg_name_to_idx, reg_idx_to_name, InsRun, InsError
 
 
 class JcDump(InsDump):
@@ -40,13 +40,47 @@ class JcDump(InsDump):
         immediate = label_dict.get(immediate_str)
         if immediate is None:
             try:
-                immediate = int(immediate_str)
+                if immediate_str.startswith('0x'):
+                    immediate = int(immediate_str, 16)
+                else:
+                    immediate = int(immediate_str)
             except ValueError:
                 raise DumpError('invalid immediate: %s' % immediate_str)
         option = 0x2
         reg_a_idx = 0
         reg_b_idx = 0
         return InsInfo(self.op_code, option, reg_a_idx, reg_b_idx, immediate)
+
+
+class JcRun(InsRun):
+
+    @classmethod
+    def get_op_code(self):
+        return 0x11
+
+    def run_ins(self, ins_info, reg_dict, ctx):
+        if ins_info.option == 0x1:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            val = reg_dict[reg_a] & 0x7fffffff
+            sign = reg_dict[reg_a] & 0x80000000
+            if sign:
+                raise InsError('negative addr: 0x%x' % reg_dict[reg_a])
+            if val >= ctx.msize:
+                raise InsError('addr out of range: 0x%x' % reg_dict[reg_a])
+            reg_dict['pc'] = reg_dict[reg_a]
+        elif ins_info.option == 0x2:
+            val = (ins_info.immediate & 0x7fff)
+            sign = ins_info.immediate & 0x8000
+            if sign == 0:
+                val -= 4
+                reg_dict['pc'] += val
+            else:
+                val += 4
+                reg_dict['pc'] -= val
+        else:
+            raise InsError('invalid option: 0x%x' % ins_info.option)
 
 
 class JncDump(InsDump):

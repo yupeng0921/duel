@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from duel.instructions import InsDump, InsInfo, DumpError, \
-    reg_name_to_idx
+    reg_name_to_idx, reg_idx_to_name, InsRun, InsError
 
 
 class CmpDump(InsDump):
@@ -56,3 +56,61 @@ class CmpDump(InsDump):
         option = 0x2
         reg_b_idx = 0
         return InsInfo(self.op_code, option, reg_a_idx, reg_b_idx, immediate)
+
+
+class CmpRun(InsRun):
+
+    @classmethod
+    def get_op_code(self):
+        return 0x0f
+
+    def run_ins(self, ins_info, reg_dict, ctx):
+        if ins_info.option == 0x1:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            reg_b = reg_idx_to_name.get(ins_info.get_b)
+            if reg_b is None:
+                raise InsError('inserror reg_b: 0x%x' % ins_info.reg_b)
+            val_a = reg_dict[reg_a] & 0x7fffffff
+            sign_a = reg_dict[reg_a] & 0x80000000
+            val_b = reg_dict[reg_b] & 0x7fffffff
+            sign_b = reg_dict[reg_b] & 0x80000000
+            if sign_a == 0 and sign_b == 0:
+                if val_b > val_a:
+                    reg_dict['flags'] |= 0x00000001
+                else:
+                    reg_dict['flags'] &= 0xfffffffe
+            elif sign_a != 0 and sign_b != 0:
+                if val_b > val_a:
+                    reg_dict['flags'] &= 0xfffffffe
+                else:
+                    reg_dict['flags'] |= 0x00000001
+            elif sign_a != 0 and sign_b == 0:
+                reg_dict['flags'] |= 0x00000001
+            else:
+                reg_dict['flags'] &= 0xfffffffe
+        elif ins_info.option == 0x2:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            val_a = reg_dict[reg_a] & 0x7fffffff
+            sign_a = reg_dict[reg_a] & 0x80000000
+            val_b = ins_info.immediate & 0x7fff
+            sign_b = ins_info.immediate & 0x8000
+            if sign_a == 0 and sign_b == 0:
+                if val_b > val_a:
+                    reg_dict['flags'] |= 0x00000001
+                else:
+                    reg_dict['flags'] &= 0xfffffffe
+            elif sign_a != 0 and sign_b != 0:
+                if val_b > val_a:
+                    reg_dict['flags'] &= 0xfffffffe
+                else:
+                    reg_dict['flags'] |= 0x00000001
+            elif sign_a != 0 and sign_b == 0:
+                reg_dict['flags'] |= 0x00000001
+            else:
+                reg_dict['flags'] &= 0xfffffffe
+        else:
+            raise InsError('invalid option: 0x%x' % ins_info.option)

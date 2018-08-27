@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from duel.instructions import InsDump, InsInfo, DumpError, \
-    reg_name_to_idx
+    reg_name_to_idx, reg_idx_to_name, InsRun, InsError
 
 
 class StrDump(InsDump):
@@ -55,3 +55,42 @@ class StrDump(InsDump):
         option = 0x2
         reg_b_idx = 0
         return InsInfo(self.op_code, option, reg_a_idx, reg_b_idx, immediate)
+
+
+class StrRun(InsRun):
+
+    @classmethod
+    def get_op_code(self):
+        return 0x04
+
+    def run_ins(self, ins_info, reg_dict, ctx):
+        if ins_info.option == 0x1:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            reg_b = reg_idx_to_name.get(ins_info.get_b)
+            if reg_b is None:
+                raise InsError('inserror reg_b: 0x%x' % ins_info.reg_b)
+            val = reg_dict[reg_b]
+            addr = reg_dict[reg_a]
+            if (addr & 0x80000000):
+                raise InsError('negative addr: 0x%x' % addr)
+            if addr >= ctx.msize:
+                raise InsError('addr out of range: 0x%x' % addr)
+            ctx.mem[addr] = val
+        elif ins_info.option == 0x2:
+            reg_a = reg_idx_to_name.get(ins_info.reg_a)
+            if reg_a is None:
+                raise InsError('invalid reg_a: 0x%x' % ins_info.reg_a)
+            addr = reg_dict[reg_a]
+            val = ins_info.immediate
+            sign = ins_info.immediate & 0x8000
+            if (addr & 0x80000000):
+                raise InsError('negative addr: 0x%x' % addr)
+            if addr >= ctx.msize:
+                raise InsError('addr out of range: 0x%x' % addr)
+            ctx.mem[addr] = val
+            if sign:
+                ctx.mem[addr] |= 0x80000000
+        else:
+            raise InsError('invalid option: 0x%x' % ins_info.option)
