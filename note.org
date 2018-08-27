@@ -1,0 +1,70 @@
+* general rules
+  use true code, not ones-complement code
+  little endian
+* reg
+  r0-r7: 0000 - 0111 (0x0 - 0x7)
+  pc: 1000 (0x8)
+  flags: 1001 (0x9)
+  evt(exception vector table): 1010 (0xa)
+  sp: 1011 (0xb)
+** flags:
+   cf, bit 0, carry flag, set to 1 if carry or borrow, or set to 0
+   zf, bit 1, zero flag, set to 1 if result is 0, or set to 0
+   exc, bit 2, exception flag, set to 1 if in exception, or set to 0
+** exception:
+   0: divide zero
+   4: mem_out_of_range
+   8: invalid_ins
+* cmd
+  push, pop
+  mov,
+  load, dump
+  add,sub,mul,div
+  and,or,xor,not
+  sl, sr
+  cmp,jmp,jc,jnc,jz,jnz
+  call
+* format
+  op_code   6 bit
+  option    2 bit
+  reg1      4 bit
+  reg2      4 bit
+  immediate 16 bit (the highest bit is sign bit)
+** push
+   push value to stack
+   op_code: 000000 (0x00)
+   option 00: use reg1
+   option 10: use immediate
+** pop
+   pop value to reg
+   op_code: 000001 (0x01)
+   option 00: use reg1
+** mov
+   move value from one place to another
+   op_code: 000010 (0x02)
+   option 01: from reg2 to reg1
+   option 10: from immediate to reg1
+** load
+   load memory to reg
+   op_code: 000011 (0x03)
+   option 01: from absolute addr in reg2 to reg1
+   option 10: from relative addr in immediate to reg1
+** dump
+   dump reg to memory
+   op_code: 000100 (0x04)
+   option 01: from reg1 to absolute addr in reg2
+   option 10: from reg1 to relative addr in immediate
+** add, sub, mul, div, and, or, xor, not
+   operate on reg1 and reg2, store result to reg1
+   op_code: 000101 - 001100 (0x05 - 0x0c)
+** sl, sr
+   reg1 as source, immediate as shift number, store result to reg1
+   op_code: 001101 - 001110 (0x0d - 0x0e)
+   immediate must be a positive number
+** cmp
+   compare reg1 and reg2, if reg1 > reg2, set cf to 0, or set cf to 1
+   op_code 001111 (0x0f)
+** jump, jc, jnc, jz, jnz
+   jump directly or jump when satisfy the status value
+   op_code: 010000 - 0x010100 (0x10-0x14)
+   
