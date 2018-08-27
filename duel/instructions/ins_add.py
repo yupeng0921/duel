@@ -4,18 +4,18 @@ from duel.instructions import InsDump, InsInfo, DumpError, \
     reg_name_to_idx
 
 
-class MovDump(InsDump):
+class AddDump(InsDump):
     '''
-    mov $12, %r0 # store 12 to reg r0
-    mov $a_label, $r0 # store the address of a_label to r0
-    mov %r1, %r0 # store the value in reg r1 to reg r0
+    add %r1, %r0 // add r1 and r0, store result to r0
+    add $42, %r0 // add 42 and r0, store result to r0
+    add $a_label, %r0 // add the address of a_label and r0, store result to r0
     '''
 
-    op_code = 0x02
+    op_code = 0x05
 
     @classmethod
     def get_name(self):
-        return 'mov'
+        return 'add'
 
     def get_ins_info(self, params, label_dict):
         if params[0].startswith('%'):

@@ -5,7 +5,11 @@ import re
 
 from duel.utils import AssembleError
 from duel.instructions import DumpError
-from duel.instructions.mov import MovDump
+from duel.instructions.ins_mov import MovDump
+from duel.instructions.ins_add import AddDump
+from duel.instructions.ins_cmp import CmpDump
+from duel.instructions.ins_str import StrDump
+from duel.instructions.ins_jump import JcDump, JncDump
 
 
 Instruction = namedtuple('Instruction', [
@@ -17,6 +21,11 @@ label_pattern = re.compile('[a-z,A-Z,_][a-z,A-Z,0-9,_]*')
 
 ins_dict = {}
 ins_dict[MovDump.get_name()] = MovDump
+ins_dict[AddDump.get_name()] = AddDump
+ins_dict[CmpDump.get_name()] = CmpDump
+ins_dict[StrDump.get_name()] = StrDump
+ins_dict[JcDump.get_name()] = JcDump
+ins_dict[JncDump.get_name()] = JncDump
 
 
 def assemble(inp_path, outp_path):
