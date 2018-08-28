@@ -96,7 +96,8 @@ def ins_decode(ins):
         op_code, option, reg_a, reg_b, immediate)
 
 
-Context = namedtuple('Context', ['mem', 'msize'])
+Context = namedtuple('Context', [
+    'mem', 'msize', 'display_list', 'ratio', 'cpu_id'])
 
 
 class InsError(Exception):

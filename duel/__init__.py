@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import logging
 
 from duel.assembler import assemble
 from duel.vm import run_vm
@@ -11,7 +12,7 @@ def asm_func(args):
 
 
 def run_func(args):
-    run_vm(args.inp, args.msize, args.csize)
+    run_vm(args.inp, args.msize, args.csize, args.frequence)
 
 
 parser = argparse.ArgumentParser(
@@ -74,9 +75,18 @@ run_parser.add_argument(
     help='max machine code size',
 )
 
+run_parser.add_argument(
+    '-f', '--frequence',
+    default=100,
+    type=int,
+    help='frequence of the vm',
+)
+
 run_parser.set_defaults(func=run_func)
 
 
 def main():
     args = parser.parse_args()
+    if args.debug is True:
+        logging.basicConfig(filename='duel.log', level=logging.DEBUG)
     return args.func(args)

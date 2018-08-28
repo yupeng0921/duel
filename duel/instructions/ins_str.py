@@ -78,6 +78,8 @@ class StrRun(InsRun):
             if addr >= ctx.msize:
                 raise InsError('addr out of range: 0x%x' % addr)
             ctx.mem[addr] = val
+            display_idx = int(addr / ctx.ratio)
+            ctx.display_list[display_idx] = ctx.cpu_id
         elif ins_info.option == 0x2:
             reg_a = reg_idx_to_name.get(ins_info.reg_a)
             if reg_a is None:
@@ -89,8 +91,13 @@ class StrRun(InsRun):
                 raise InsError('negative addr: 0x%x' % addr)
             if addr >= ctx.msize:
                 raise InsError('addr out of range: 0x%x' % addr)
-            ctx.mem[addr] = val
+            ctx.mem[addr] = val & 0x00ff
+            ctx.mem[addr+1] = val & 0x7f00
+            ctx.mem[addr+2] = 0
+            ctx.mem[addr+3] = 0
             if sign:
                 ctx.mem[addr] |= 0x80000000
+            display_idx = int(addr / ctx.ratio)
+            ctx.display_list[display_idx] = ctx.cpu_id
         else:
             raise InsError('invalid option: 0x%x' % ins_info.option)
